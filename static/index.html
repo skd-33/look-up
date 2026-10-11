@@ -301,13 +301,59 @@ body {
   padding: 40px 36px;
   border: 1px solid var(--indigo);
 }
+.nudge-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 .date-line {
   font-family: "Courier New", Courier, monospace;
   font-size: 0.8rem;
   font-variant: small-caps;
   letter-spacing: 0.1em;
   color: var(--text-dim);
-  margin-bottom: 12px;
+}
+.tone-select-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.tone-label {
+  font-family: "Courier New", Courier, monospace;
+  font-variant: small-caps;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+}
+.tone-chips {
+  display: inline-flex;
+  gap: 4px;
+}
+.tone-chip {
+  background: transparent;
+  border: 1px solid var(--indigo);
+  color: var(--text-dim);
+  font-family: Georgia, "Times New Roman", serif;
+  font-variant: small-caps;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.tone-chip:hover {
+  color: var(--text);
+  border-color: var(--indigo-light);
+}
+.tone-chip.active {
+  background: var(--indigo);
+  color: var(--amber);
+  border-color: var(--amber);
+  font-weight: bold;
 }
 .nudge-text {
   font-size: clamp(1.2rem, 2.5vw, 1.8rem);
@@ -551,18 +597,111 @@ body {
   font-family: "Courier New", Courier, monospace;
   font-size: clamp(2rem, 6vw, 4rem);
   color: var(--amber);
-  margin-bottom: 24px;
+  margin-bottom: 20px;
+}
+.timer-prompt {
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-size: clamp(0.95rem, 2.2vw, 1.25rem);
+  color: var(--text-dim);
+  max-width: 520px;
+  margin: 0 auto 28px;
+  padding: 0 16px;
+  line-height: 1.5;
+  min-height: 2.8em;
+}
+.timer-prompt[hidden] {
+  display: none;
+}
+.timer-finish-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 480px;
+  width: 90%;
+  margin: 0 auto 24px;
+}
+.timer-finish-box[hidden] {
+  display: none;
 }
 .timer-closing-msg {
   font-family: Georgia, "Times New Roman", serif;
   font-size: clamp(1.1rem, 2.8vw, 1.6rem);
   color: var(--amber);
-  margin-bottom: 28px;
+  margin-bottom: 20px;
   max-width: 480px;
   padding: 0 16px;
   line-height: 1.4;
 }
 .timer-closing-msg[hidden] {
+  display: none;
+}
+.timer-reflect-wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+}
+.reflect-label {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+.reflect-input {
+  width: 100%;
+  background: var(--ink);
+  border: 1px solid var(--indigo);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 10px 12px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  resize: vertical;
+  outline: none;
+}
+.reflect-input:focus {
+  border-color: var(--indigo-light);
+}
+.reflect-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+.reflect-submit-btn {
+  background: var(--amber);
+  border: none;
+  color: var(--ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-variant: small-caps;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 8px 18px;
+  border-radius: 18px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.reflect-submit-btn:hover {
+  background: var(--amber-glow);
+}
+.reflect-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+.reflect-reply {
+  margin-top: 10px;
+  padding: 12px 16px;
+  background: rgba(30, 45, 106, 0.4);
+  border-left: 3px solid var(--amber);
+  border-radius: 4px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--text);
+  font-style: italic;
+}
+.reflect-reply[hidden] {
   display: none;
 }
 .timer-exit {
@@ -799,7 +938,17 @@ body {
   <div class="hero-content">
     <div class="nudge-col">
       <div class="nudge-panel">
-        <div class="date-line" id="dateLine">—</div>
+        <div class="nudge-header-row">
+          <div class="date-line" id="dateLine">—</div>
+          <div class="tone-select-wrap">
+            <span class="tone-label">Voice:</span>
+            <div class="tone-chips" role="radiogroup" aria-label="Tone selector">
+              <button type="button" class="tone-chip active" data-tone="calm">Calm</button>
+              <button type="button" class="tone-chip" data-tone="excited">Excited</button>
+              <button type="button" class="tone-chip" data-tone="poetic">Poetic</button>
+            </div>
+          </div>
+        </div>
         <div class="nudge-text" id="nudgeText">
           <span class="nudge-loading">Writing your nudge...</span>
         </div>
@@ -877,7 +1026,18 @@ body {
 <div class="timer-overlay" id="timerOverlay">
   <div class="timer-msg" id="timerMsg">Phone away. Look up.</div>
   <div class="timer-countdown" id="timerCountdown">20:00</div>
-  <div class="timer-closing-msg" id="timerClosingMsg" hidden>Time is up. Welcome back from the stars.</div>
+  <div class="timer-prompt" id="timerPrompt"></div>
+  <div class="timer-finish-box" id="timerFinishBox" hidden>
+    <div class="timer-closing-msg" id="timerClosingMsg">Time is up. Welcome back from the stars.</div>
+    <div class="timer-reflect-wrap" id="timerReflectWrap">
+      <label for="reflectInput" class="reflect-label">What did you see?</label>
+      <textarea id="reflectInput" class="reflect-input" rows="2" placeholder="A steady cream star, faint constellations, a cool breeze..."></textarea>
+      <div class="reflect-actions">
+        <button type="button" class="reflect-submit-btn" id="reflectSubmitBtn">Share with Look Up</button>
+      </div>
+      <div class="reflect-reply" id="reflectReply" hidden></div>
+    </div>
+  </div>
   <button class="timer-exit" id="timerExitBtn">Exit</button>
   <div class="timer-hint">or press Esc</div>
 </div>
@@ -1037,12 +1197,46 @@ body {
     );
   });
 
+  // ── Tone state ──
+  var currentTone = "calm";
+  try {
+    var savedTone = localStorage.getItem("lookup_tone");
+    if (savedTone && ["calm", "excited", "poetic"].indexOf(savedTone) !== -1) {
+      currentTone = savedTone;
+    }
+  } catch (e) {}
+
+  var toneChips = document.querySelectorAll(".tone-chip");
+  function setTone(tone) {
+    currentTone = tone;
+    try {
+      localStorage.setItem("lookup_tone", tone);
+    } catch (e) {}
+    toneChips.forEach(function (chip) {
+      if (chip.getAttribute("data-tone") === tone) {
+        chip.classList.add("active");
+      } else {
+        chip.classList.remove("active");
+      }
+    });
+  }
+  setTone(currentTone);
+
+  toneChips.forEach(function (chip) {
+    chip.addEventListener("click", function () {
+      var t = chip.getAttribute("data-tone");
+      if (t !== currentTone) {
+        setTone(t);
+        fetchNudge();
+      }
+    });
+  });
+
   // ── Fetch sky data & nudge ──
   var skyData = null;
 
   function fetchSky(lat, lon) {
     document.getElementById("factsList").innerHTML = '<div class="fact-not-visible">Loading sky data...</div>';
-    document.getElementById("nudgeText").innerHTML = '<span class="nudge-loading">Writing your nudge...</span>';
 
     var query = "?lat=" + encodeURIComponent(lat) + "&lon=" + encodeURIComponent(lon);
 
@@ -1060,6 +1254,14 @@ body {
         document.getElementById("factsList").innerHTML = '<div class="fact-not-visible">Could not load sky data.</div>';
       });
 
+    fetchNudge();
+  }
+
+  function fetchNudge() {
+    document.getElementById("nudgeText").innerHTML = '<span class="nudge-loading">Writing your nudge...</span>';
+    var query = "?lat=" + encodeURIComponent(currentLocation.lat) +
+                "&lon=" + encodeURIComponent(currentLocation.lon) +
+                "&tone=" + encodeURIComponent(currentTone);
     fetch("/api/nudge" + query)
       .then(function (r) {
         if (!r.ok) throw new Error("Status " + r.status);
@@ -1280,19 +1482,50 @@ body {
   }
 
   // ── Timer overlay execution ──
+  var TIMER_PROMPTS = [
+    "Let your shoulders drop. Your eyes take about ten minutes to truly open to the dark.",
+    "Notice how many more stars have appeared since you first walked out.",
+    "Breathe in the cool night air. Let the quiet settle around you.",
+    "Look softly toward the horizon. The faintest stars appear when you look just slightly past them.",
+    "The light you see tonight has been traveling through cold space for minutes, hours, or centuries.",
+    "Stay still for a moment and listen to the stillness of the neighborhood.",
+    "Notice the subtle colors in the stars — some ice blue, some warm amber.",
+    "No notifications, no rush. Just you and the ancient sky."
+  ];
+
   var overlay = document.getElementById("timerOverlay");
   var countdown = document.getElementById("timerCountdown");
+  var timerPrompt = document.getElementById("timerPrompt");
+  var timerFinishBox = document.getElementById("timerFinishBox");
   var timerClosingMsg = document.getElementById("timerClosingMsg");
+  var reflectInput = document.getElementById("reflectInput");
+  var reflectSubmitBtn = document.getElementById("reflectSubmitBtn");
+  var reflectReply = document.getElementById("reflectReply");
   var goOutBtn = document.getElementById("goOutBtn");
   var exitBtn = document.getElementById("timerExitBtn");
+
   var timerId = null;
   var timerSeconds = 0;
+  var timerTotalSeconds = 0;
+
+  function updateTimerPrompt() {
+    var elapsed = timerTotalSeconds - timerSeconds;
+    var idx = Math.floor(elapsed / 300) % TIMER_PROMPTS.length;
+    timerPrompt.textContent = TIMER_PROMPTS[idx];
+  }
 
   function startTimer() {
-    timerSeconds = timerMinutes * 60;
+    timerTotalSeconds = timerMinutes * 60;
+    timerSeconds = timerTotalSeconds;
     overlay.classList.add("active");
+    timerFinishBox.hidden = true;
     timerClosingMsg.hidden = true;
+    timerPrompt.hidden = false;
+    reflectReply.hidden = true;
+    reflectInput.value = "";
     updateCountdown();
+    updateTimerPrompt();
+
     timerId = setInterval(function () {
       timerSeconds--;
       if (timerSeconds <= 0) {
@@ -1300,6 +1533,7 @@ body {
         return;
       }
       updateCountdown();
+      updateTimerPrompt();
     }, 1000);
   }
 
@@ -1307,13 +1541,16 @@ body {
     if (timerId) { clearInterval(timerId); timerId = null; }
     playSoftChime();
     countdown.textContent = "00:00";
+    timerPrompt.hidden = true;
+    timerFinishBox.hidden = false;
     timerClosingMsg.hidden = false;
   }
 
   function stopTimer() {
     overlay.classList.remove("active");
     if (timerId) { clearInterval(timerId); timerId = null; }
-    timerClosingMsg.hidden = true;
+    timerFinishBox.hidden = true;
+    timerPrompt.hidden = true;
   }
 
   function updateCountdown() {
@@ -1321,6 +1558,44 @@ body {
     var s = timerSeconds % 60;
     countdown.textContent = (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
   }
+
+  reflectSubmitBtn.addEventListener("click", function () {
+    var text = reflectInput.value.trim();
+    if (!text) {
+      reflectInput.focus();
+      return;
+    }
+    reflectSubmitBtn.disabled = true;
+    reflectSubmitBtn.textContent = "Reflecting...";
+    reflectReply.hidden = true;
+
+    fetch("/api/reflect", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: text,
+        lat: currentLocation.lat,
+        lon: currentLocation.lon,
+        tone: currentTone
+      })
+    })
+      .then(function (r) {
+        if (!r.ok) throw new Error("Status " + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        reflectReply.textContent = data.response;
+        reflectReply.hidden = false;
+      })
+      .catch(function () {
+        reflectReply.textContent = "Thank you for stepping outside tonight. Even a quiet glance at the sky stays with you.";
+        reflectReply.hidden = false;
+      })
+      .finally(function () {
+        reflectSubmitBtn.disabled = false;
+        reflectSubmitBtn.textContent = "Share with Look Up";
+      });
+  });
 
   goOutBtn.addEventListener("click", startTimer);
   exitBtn.addEventListener("click", stopTimer);

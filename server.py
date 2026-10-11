@@ -1,10 +1,10 @@
-"""Minimal HTTP server: static files + two API endpoints."""
+"""Minimal HTTP server: static files + API endpoints."""
 import json, math, os
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 
 from astro import tonight
-from nudge import make_nudge
+from nudge import make_nudge, make_reflection
 
 # --- Config ---
 LAT = 12.9716
@@ -13,6 +13,7 @@ MODEL = "gemma3:1b"
 PORT = 8000
 
 STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
+VALID_TONES = {"calm", "excited", "poetic"}
 
 
 def _parse_lat_lon(qs):
@@ -60,11 +61,46 @@ class Handler(SimpleHTTPRequestHandler):
             if err:
                 self._error_response(400, err)
                 return
+            tone = qs.get("tone", ["calm"])[0].lower()
+            if tone not in VALID_TONES:
+                tone = "calm"
             data = tonight(lat, lon)
-            text = make_nudge(data, model=MODEL)
+            text = make_nudge(data, model=MODEL, tone=tone)
             self._json_response({"text": text})
         else:
             super().do_GET()
+
+    def do_POST(self):
+        parsed = urlparse(self.path)
+        if parsed.path == "/api/reflect":
+            try:
+                length = int(self.headers.get("Content-Length", 0))
+                raw_body = self.rfile.read(length) if length > 0 else b"{}"
+                payload = json.loads(raw_body)
+            except (ValueError, json.JSONDecodeError):
+                self._error_response(400, "Invalid JSON body")
+                return
+
+            user_text = payload.get("text", "")
+            lat = payload.get("lat", LAT)
+            lon = payload.get("lon", LON)
+            tone = payload.get("tone", "calm")
+            if tone not in VALID_TONES:
+                tone = "calm"
+
+            try:
+                lat = float(lat)
+                lon = float(lon)
+                if not (-90.0 <= lat <= 90.0 and -180.0 <= lon <= 180.0):
+                    lat, lon = LAT, LON
+            except (ValueError, TypeError):
+                lat, lon = LAT, LON
+
+            data = tonight(lat, lon)
+            reply = make_reflection(user_text, data, model=MODEL, tone=tone)
+            self._json_response({"response": reply})
+        else:
+            self._error_response(404, "Not Found")
 
     def _json_response(self, obj, status=200):
         body = json.dumps(obj).encode()
