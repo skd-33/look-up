@@ -321,6 +321,36 @@ body {
   opacity: 0.6;
   margin-top: 16px;
 }
+
+/* ── Motion: Twinkle ── */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.9; }
+}
+.scene-stars circle {
+  animation: twinkle 4s ease-in-out infinite;
+}
+.scene-stars circle:nth-child(2n)  { animation-duration: 5s; animation-delay: 0.5s; }
+.scene-stars circle:nth-child(3n)  { animation-duration: 6s; animation-delay: 1.2s; }
+.scene-stars circle:nth-child(5n)  { animation-duration: 3.5s; animation-delay: 0.8s; }
+.scene-stars circle:nth-child(7n)  { animation-duration: 7s; animation-delay: 2s; }
+
+/* ── Motion: Gazer head tilt ── */
+@keyframes headtilt {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-8deg); }
+}
+.gazer-head {
+  transform-origin: 866px 488px;
+  animation: headtilt 8s ease-in-out infinite;
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .scene-stars circle,
+  .gazer-head { animation: none; }
+  .hero-scene svg g { transition: none !important; }
+}
 </style>
 </head>
 <body>
@@ -377,8 +407,8 @@ body {
       <!-- Sky -->
       <rect class="scene-sky" width="1440" height="900" fill="url(#skyGrad)"/>
 
-      <!-- Stars -->
-      <g class="scene-stars">
+      <!-- Stars (parallax factor 0.02) -->
+      <g class="scene-stars" data-parallax="0.02" style="transition:transform 0.15s ease-out">
         <circle cx="120" cy="80" r="1.2" fill="#e8e0d0" opacity="0.7"/>
         <circle cx="310" cy="45" r="0.8" fill="#e8e0d0" opacity="0.5"/>
         <circle cx="480" cy="120" r="1" fill="#e8e0d0" opacity="0.6"/>
@@ -407,20 +437,20 @@ body {
         <circle cx="950" cy="380" r="0.6" fill="#e8e0d0" opacity="0.4"/>
       </g>
 
-      <!-- Venus glow -->
-      <g class="scene-venus">
+      <!-- Venus glow (parallax factor 0.03) -->
+      <g class="scene-venus" data-parallax="0.03" style="transition:transform 0.15s ease-out">
         <circle cx="350" cy="280" r="12" fill="#d4a04a" opacity="0.08"/>
         <circle cx="350" cy="280" r="6" fill="#d4a04a" opacity="0.15"/>
         <circle cx="350" cy="280" r="2.5" fill="#d4a04a" opacity="0.9"/>
       </g>
 
       <!-- Far hills -->
-      <g class="scene-hills-far">
+      <g class="scene-hills-far" data-parallax="0.05" style="transition:transform 0.15s ease-out">
         <path d="M0 620 Q180 520, 360 580 Q540 500, 720 560 Q900 490, 1080 540 Q1260 480, 1440 550 L1440 900 L0 900Z" fill="#0e1538" opacity="0.9"/>
       </g>
 
       <!-- Mid trees -->
-      <g class="scene-trees">
+      <g class="scene-trees" data-parallax="0.07" style="transition:transform 0.15s ease-out">
         <!-- Tree silhouettes on the hills -->
         <path d="M80 610 L90 560 L100 610Z" fill="#0a1028"/>
         <path d="M85 610 L90 570 L95 610Z" fill="#0a1028"/>
@@ -437,7 +467,7 @@ body {
       </g>
 
       <!-- Foreground bushes -->
-      <g class="scene-bushes">
+      <g class="scene-bushes" data-parallax="0.09" style="transition:transform 0.15s ease-out">
         <ellipse cx="100" cy="780" rx="80" ry="30" fill="#080e22"/>
         <ellipse cx="350" cy="800" rx="120" ry="35" fill="#080e22"/>
         <ellipse cx="700" cy="790" rx="90" ry="28" fill="#080e22"/>
@@ -446,7 +476,7 @@ body {
       </g>
 
       <!-- Stargazer silhouette on the hill -->
-      <g class="scene-gazer">
+      <g class="scene-gazer" data-parallax="0.08" style="transition:transform 0.15s ease-out">
         <!-- Standing figure on the hill ridge -->
         <!-- Body -->
         <path d="M860 555 L860 500 Q860 490, 865 488 L870 490 Q872 492, 872 500 L872 540 L880 555" fill="#080e22" stroke="none"/>
@@ -714,6 +744,24 @@ body {
       stopTimer();
     }
   });
+
+  // ── Parallax on mouse move ──
+  var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!reducedMotion) {
+    var heroEl = document.querySelector(".hero");
+    var layers = heroEl.querySelectorAll("[data-parallax]");
+    heroEl.addEventListener("mousemove", function (e) {
+      var rect = heroEl.getBoundingClientRect();
+      var cx = (e.clientX - rect.left) / rect.width - 0.5;   // -0.5 to 0.5
+      var cy = (e.clientY - rect.top) / rect.height - 0.5;
+      layers.forEach(function (layer) {
+        var f = parseFloat(layer.getAttribute("data-parallax")) || 0;
+        var dx = cx * f * 60;  // max ~3px shift for outermost layer
+        var dy = cy * f * 40;
+        layer.setAttribute("transform", "translate(" + dx + "," + dy + ")");
+      });
+    });
+  }
 
 })();
 </script>
