@@ -84,6 +84,177 @@ body {
   .menu-btn { display: block; }
 }
 
+/* ── Header right & Location chip ── */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.location-wrap {
+  position: relative;
+}
+.location-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(22, 32, 80, 0.7);
+  border: 1px solid var(--indigo);
+  border-radius: 20px;
+  padding: 6px 14px;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: background 0.2s, border-color 0.2s;
+}
+.location-chip:hover, .location-chip:focus {
+  background: rgba(30, 45, 106, 0.9);
+  border-color: var(--indigo-light);
+}
+.location-chip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--amber);
+  flex-shrink: 0;
+}
+.location-chip-name {
+  font-family: Georgia, "Times New Roman", serif;
+  font-variant: small-caps;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+}
+.location-chip-coords {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+.location-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 310px;
+  background: var(--ink-deep);
+  border: 1px solid var(--indigo);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+  z-index: 120;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.location-panel[hidden] {
+  display: none;
+}
+.location-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--indigo);
+}
+.location-panel-title {
+  font-family: Georgia, "Times New Roman", serif;
+  font-variant: small-caps;
+  font-size: 0.88rem;
+  letter-spacing: 0.08em;
+  color: var(--text);
+}
+.location-panel-close {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+.location-panel-close:hover { color: var(--text); }
+.location-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.location-label {
+  font-family: "Courier New", Courier, monospace;
+  font-variant: small-caps;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+.location-select, .location-input {
+  background: var(--ink);
+  border: 1px solid var(--indigo);
+  border-radius: 6px;
+  color: var(--text);
+  padding: 7px 10px;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.82rem;
+  outline: none;
+}
+.location-select:focus, .location-input:focus {
+  border-color: var(--indigo-light);
+}
+.location-coords-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.location-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.location-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+.location-btn {
+  font-family: Georgia, "Times New Roman", serif;
+  font-variant: small-caps;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  padding: 6px 14px;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+.location-btn-geo {
+  background: transparent;
+  border: 1px solid var(--indigo-light);
+  color: var(--text);
+}
+.location-btn-geo:hover {
+  background: rgba(30, 45, 106, 0.5);
+}
+.location-btn-apply {
+  background: var(--amber);
+  border: none;
+  color: var(--ink);
+  font-weight: 600;
+}
+.location-btn-apply:hover {
+  background: var(--amber-glow);
+}
+.location-msg {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  min-height: 1.2em;
+  line-height: 1.3;
+}
+@media (max-width: 639px) {
+  .location-chip-coords { display: none; }
+  .location-panel {
+    right: -10px;
+    width: calc(100vw - 32px);
+    max-width: 310px;
+  }
+}
+
 /* ── Page container ── */
 .page { max-width: var(--max-w); margin: 0 auto; padding: 0 var(--page-px); }
 
@@ -379,16 +550,59 @@ body {
         <path d="M2 42 Q60 38, 110 40 T220 42" fill="none" stroke="#e8e0d0" stroke-width="0.5" opacity="0.4"/>
       </svg>
     </a>
-    <button class="menu-btn" id="menuBtn" aria-label="Menu">
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
-        <line x1="3" y1="6" x2="17" y2="6"/><line x1="3" y1="10" x2="17" y2="10"/><line x1="3" y1="14" x2="17" y2="14"/>
-      </svg>
-    </button>
-    <nav class="nav" id="mainNav">
-      <a href="#tonight">Tonight</a>
-      <a href="#sky">Sky</a>
-      <a href="#about">About</a>
-    </nav>
+    <div class="header-right">
+      <div class="location-wrap">
+        <button class="location-chip" id="locationChip" aria-expanded="false" aria-haspopup="dialog" aria-label="Change location">
+          <span class="location-chip-dot"></span>
+          <span class="location-chip-name" id="locationChipName">Bengaluru</span>
+          <span class="location-chip-coords" id="locationChipCoords">12.97° N, 77.59° E</span>
+        </button>
+        <div class="location-panel" id="locationPanel" hidden role="dialog" aria-label="Location settings">
+          <div class="location-panel-header">
+            <span class="location-panel-title">Location</span>
+            <button class="location-panel-close" id="locationCloseBtn" aria-label="Close location panel">&times;</button>
+          </div>
+          <div class="location-row">
+            <label for="citySelect" class="location-label">City</label>
+            <select id="citySelect" class="location-select">
+              <option value="Bengaluru">Bengaluru</option>
+              <option value="Delhi">Delhi</option>
+              <option value="Mumbai">Mumbai</option>
+              <option value="Chennai">Chennai</option>
+              <option value="Hyderabad">Hyderabad</option>
+              <option value="Kolkata">Kolkata</option>
+              <option value="Pune">Pune</option>
+              <option value="custom">Custom Coordinates</option>
+            </select>
+          </div>
+          <div class="location-coords-inputs">
+            <div class="location-input-group">
+              <label for="latInput" class="location-label">Latitude</label>
+              <input type="number" id="latInput" class="location-input" step="0.0001" min="-90" max="90" value="12.9716">
+            </div>
+            <div class="location-input-group">
+              <label for="lonInput" class="location-label">Longitude</label>
+              <input type="number" id="lonInput" class="location-input" step="0.0001" min="-180" max="180" value="77.5946">
+            </div>
+          </div>
+          <div class="location-actions">
+            <button class="location-btn location-btn-geo" id="geoBtn">Use my location</button>
+            <button class="location-btn location-btn-apply" id="applyLocationBtn">Apply</button>
+          </div>
+          <div class="location-msg" id="locationMsg" role="status"></div>
+        </div>
+      </div>
+      <button class="menu-btn" id="menuBtn" aria-label="Menu">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+          <line x1="3" y1="6" x2="17" y2="6"/><line x1="3" y1="10" x2="17" y2="10"/><line x1="3" y1="14" x2="17" y2="14"/>
+        </svg>
+      </button>
+      <nav class="nav" id="mainNav">
+        <a href="#tonight">Tonight</a>
+        <a href="#sky">Sky</a>
+        <a href="#about">About</a>
+      </nav>
+    </div>
   </div>
 </header>
 
@@ -571,29 +785,188 @@ body {
     mainNav.classList.toggle("open");
   });
 
-  // ── Fetch sky data ──
+  // ── Location state & cities ──
+  var CITIES = {
+    "Bengaluru": { lat: 12.9716, lon: 77.5946 },
+    "Delhi": { lat: 28.6139, lon: 77.2090 },
+    "Mumbai": { lat: 19.0760, lon: 72.8777 },
+    "Chennai": { lat: 13.0827, lon: 80.2707 },
+    "Hyderabad": { lat: 17.3850, lon: 78.4867 },
+    "Kolkata": { lat: 22.5726, lon: 88.3639 },
+    "Pune": { lat: 18.5204, lon: 73.8567 }
+  };
+
+  function formatCoords(lat, lon) {
+    var ns = lat >= 0 ? "N" : "S";
+    var ew = lon >= 0 ? "E" : "W";
+    return Math.abs(lat).toFixed(2) + "\u00B0 " + ns + ", " + Math.abs(lon).toFixed(2) + "\u00B0 " + ew;
+  }
+
+  var currentLocation = { name: "Bengaluru", lat: 12.9716, lon: 77.5946 };
+  try {
+    var savedLoc = localStorage.getItem("lookup_location");
+    if (savedLoc) {
+      var parsedLoc = JSON.parse(savedLoc);
+      if (typeof parsedLoc.lat === "number" && typeof parsedLoc.lon === "number") {
+        currentLocation = parsedLoc;
+      }
+    }
+  } catch (e) {}
+
+  var locationChip = document.getElementById("locationChip");
+  var locationChipName = document.getElementById("locationChipName");
+  var locationChipCoords = document.getElementById("locationChipCoords");
+  var locationPanel = document.getElementById("locationPanel");
+  var locationCloseBtn = document.getElementById("locationCloseBtn");
+  var citySelect = document.getElementById("citySelect");
+  var latInput = document.getElementById("latInput");
+  var lonInput = document.getElementById("lonInput");
+  var geoBtn = document.getElementById("geoBtn");
+  var applyLocationBtn = document.getElementById("applyLocationBtn");
+  var locationMsg = document.getElementById("locationMsg");
+
+  function updateLocationUI() {
+    locationChipName.textContent = currentLocation.name || "Location";
+    locationChipCoords.textContent = formatCoords(currentLocation.lat, currentLocation.lon);
+    latInput.value = currentLocation.lat.toFixed(4);
+    lonInput.value = currentLocation.lon.toFixed(4);
+    if (CITIES[currentLocation.name]) {
+      citySelect.value = currentLocation.name;
+    } else {
+      citySelect.value = "custom";
+    }
+  }
+
+  function toggleLocationPanel(show) {
+    var isHidden = show !== undefined ? !show : !locationPanel.hidden;
+    locationPanel.hidden = isHidden;
+    locationChip.setAttribute("aria-expanded", String(!isHidden));
+    locationMsg.textContent = "";
+  }
+
+  locationChip.addEventListener("click", function (e) {
+    e.stopPropagation();
+    toggleLocationPanel();
+  });
+  locationCloseBtn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    toggleLocationPanel(false);
+  });
+  locationPanel.addEventListener("click", function (e) {
+    e.stopPropagation();
+  });
+  document.addEventListener("click", function () {
+    if (!locationPanel.hidden) toggleLocationPanel(false);
+  });
+
+  citySelect.addEventListener("change", function () {
+    var val = citySelect.value;
+    if (CITIES[val]) {
+      latInput.value = CITIES[val].lat.toFixed(4);
+      lonInput.value = CITIES[val].lon.toFixed(4);
+    }
+    locationMsg.textContent = "";
+  });
+
+  latInput.addEventListener("input", function () { citySelect.value = "custom"; });
+  lonInput.addEventListener("input", function () { citySelect.value = "custom"; });
+
+  applyLocationBtn.addEventListener("click", function () {
+    var lat = parseFloat(latInput.value);
+    var lon = parseFloat(lonInput.value);
+    if (isNaN(lat) || lat < -90 || lat > 90) {
+      locationMsg.textContent = "Latitude must be between -90 and 90.";
+      return;
+    }
+    if (isNaN(lon) || lon < -180 || lon > 180) {
+      locationMsg.textContent = "Longitude must be between -180 and 180.";
+      return;
+    }
+
+    var cityName = citySelect.value !== "custom" ? citySelect.value : "Custom";
+    currentLocation = { name: cityName, lat: lat, lon: lon };
+    try {
+      localStorage.setItem("lookup_location", JSON.stringify(currentLocation));
+    } catch (e) {}
+    updateLocationUI();
+    toggleLocationPanel(false);
+    fetchSky(currentLocation.lat, currentLocation.lon);
+  });
+
+  geoBtn.addEventListener("click", function () {
+    if (navigator.onLine === false) {
+      locationMsg.textContent = "You appear to be offline. Please choose a city or enter coordinates.";
+      return;
+    }
+    if (!navigator.geolocation) {
+      locationMsg.textContent = "Geolocation is not supported by your browser.";
+      return;
+    }
+    locationMsg.textContent = "Detecting your location...";
+    navigator.geolocation.getCurrentPosition(
+      function (pos) {
+        var lat = pos.coords.latitude;
+        var lon = pos.coords.longitude;
+        var name = "My Location";
+        for (var c in CITIES) {
+          if (Math.abs(CITIES[c].lat - lat) < 0.15 && Math.abs(CITIES[c].lon - lon) < 0.15) {
+            name = c;
+            break;
+          }
+        }
+        currentLocation = { name: name, lat: lat, lon: lon };
+        try {
+          localStorage.setItem("lookup_location", JSON.stringify(currentLocation));
+        } catch (e) {}
+        updateLocationUI();
+        toggleLocationPanel(false);
+        fetchSky(currentLocation.lat, currentLocation.lon);
+      },
+      function () {
+        locationMsg.textContent = "Could not detect location. Please choose a city or enter coordinates.";
+      },
+      { timeout: 8000, enableHighAccuracy: false }
+    );
+  });
+
+  // ── Fetch sky data & nudge ──
   var skyData = null;
 
-  fetch("/api/tonight")
-    .then(function (r) { return r.json(); })
-    .then(function (data) {
-      skyData = data;
-      renderData(data);
-      renderSkyStrip(data);
-    })
-    .catch(function () {
-      document.getElementById("nudgeText").textContent = "Could not load sky data.";
-    });
+  function fetchSky(lat, lon) {
+    document.getElementById("factsList").innerHTML = '<div class="fact-not-visible">Loading sky data...</div>';
+    document.getElementById("nudgeText").innerHTML = '<span class="nudge-loading">Writing your nudge...</span>';
 
-  // ── Fetch nudge (can be slow) ──
-  fetch("/api/nudge")
-    .then(function (r) { return r.json(); })
-    .then(function (data) {
-      document.getElementById("nudgeText").textContent = data.text;
-    })
-    .catch(function () {
-      document.getElementById("nudgeText").textContent = "Step outside tonight. The sky is waiting.";
-    });
+    var query = "?lat=" + encodeURIComponent(lat) + "&lon=" + encodeURIComponent(lon);
+
+    fetch("/api/tonight" + query)
+      .then(function (r) {
+        if (!r.ok) throw new Error("Status " + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        skyData = data;
+        renderData(data);
+        renderSkyStrip(data);
+      })
+      .catch(function () {
+        document.getElementById("factsList").innerHTML = '<div class="fact-not-visible">Could not load sky data.</div>';
+      });
+
+    fetch("/api/nudge" + query)
+      .then(function (r) {
+        if (!r.ok) throw new Error("Status " + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        document.getElementById("nudgeText").textContent = data.text;
+      })
+      .catch(function () {
+        document.getElementById("nudgeText").textContent = "Step outside tonight. The sky is waiting.";
+      });
+  }
+
+  updateLocationUI();
+  fetchSky(currentLocation.lat, currentLocation.lon);
 
   function renderData(data) {
     // Date line

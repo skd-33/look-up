@@ -62,55 +62,43 @@ def tonight(lat, lon, tz_hours=None):
     earth = eph["earth"]
     sun_body = eph["sun"]
 
-    if tz_hours is None:
-        tz_hours = round(lon / 15 * 2) / 2  # nearest half-hour
-    tz = _FixedOffset(tz_hours)
+    if tz_hours is not None:
+        tz = _FixedOffset(tz_hours)
+    else:
+        tz = datetime.now().astimezone().tzinfo
 
     now_utc = datetime.now(timezone.utc)
-    now_local = now_utc.astimezone(tz)
+    now_local = datetime.now(tz)
     today = now_local.date()
 
-    # Build a search window that covers "tonight"
+    # Search window: sunset to next sunrise
+    # If opened after midnight (e.g. before 6am), the night started yesterday evening
     if now_local.hour < 6:
-        # Currently in the small hours — cover rest of this night
-        start_local = now_local.replace(second=0, microsecond=0)
-        end_local = datetime(today.year, today.month, today.day, 6, 0, tzinfo=tz)
-        # For sunset/sunrise, look back to yesterday 4pm
-        sun_search_start = datetime(today.year, today.month, today.day, 16, 0, tzinfo=tz) - timedelta(days=1)
-    elif now_local.hour < 12:
-        # Morning — show tonight (upcoming evening)
-        start_local = datetime(today.year, today.month, today.day, 16, 0, tzinfo=tz)
-        end_local = start_local + timedelta(hours=14)
-        sun_search_start = start_local
+        ref_date = today - timedelta(days=1)
     else:
-        # Afternoon/evening — tonight starts at 4pm today
-        start_local = datetime(today.year, today.month, today.day, 16, 0, tzinfo=tz)
-        end_local = start_local + timedelta(hours=14)
-        sun_search_start = start_local
+        ref_date = today
 
-    sun_search_end = end_local + timedelta(hours=2)
+    start_local = datetime(ref_date.year, ref_date.month, ref_date.day, 16, 0, tzinfo=tz)
+    end_local = start_local + timedelta(hours=15)  # until 7am next morning
 
     t0 = ts.from_datetime(start_local)
     t1 = ts.from_datetime(end_local)
 
     observer = earth + wgs84.latlon(lat, lon)
 
-    # Sun rise/set — use broader window to catch both
+    # Sun rise/set across full night window
     f = sunrise_sunset(eph, wgs84.latlon(lat, lon))
-    ts0 = ts.from_datetime(sun_search_start)
-    ts1 = ts.from_datetime(sun_search_end)
-    times, events = find_discrete(ts0, ts1, f)
+    times, events = find_discrete(t0, t1, f)
     sunset_str = sunrise_str = None
     for t_ev, ev in zip(times, events):
         local = t_ev.utc_datetime().astimezone(tz)
-        if ev == 0:  # sunset
+        if ev == 0 and sunset_str is None:
             sunset_str = local.strftime("%I:%M %p")
-        else:        # sunrise
+        elif ev == 1 and sunrise_str is None:
             sunrise_str = local.strftime("%I:%M %p")
 
     # Check each body across the night window in 10-min steps
-    window_hours = (end_local - start_local).total_seconds() / 3600
-    steps = max(int(window_hours * 6), 12)
+    steps = 90  # 15 hours / 10 min
     t_steps = ts.linspace(t0, t1, steps + 1)
 
     t_now = ts.from_datetime(now_utc)
