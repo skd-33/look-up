@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Look Up — Tonight's Sky</title>
+<meta name="description" content="An offline stargazing companion. See what's visible tonight and step outside.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%23e8e0d0' stroke-width='1.5'/%3E%3Ccircle cx='16' cy='8' r='2.5' fill='%23d4a04a'/%3E%3C/svg%3E">
+<style>
+/* ── Design Tokens ── */
+:root {
+  --ink: #0b1230;
+  --ink-deep: #070d20;
+  --ink-mid: #162050;
+  --indigo: #1e2d6a;
+  --indigo-light: #2a3d7a;
+  --text: #e8e0d0;
+  --text-dim: #9a9080;
+  --amber: #d4a04a;
+  --amber-glow: #e8b85a;
+  --header-h: 72px;
+  --page-px: 48px;
+  --max-w: 1280px;
+}
+@media (max-width: 1023px) { :root { --page-px: 24px; } }
+@media (max-width: 639px)  { :root { --page-px: 16px; } }
+
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: Georgia, "Times New Roman", serif;
+  background: var(--ink);
+  color: var(--text);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* ── Header ── */
+.header {
+  position: sticky; top: 0; z-index: 100;
+  height: var(--header-h);
+  background: var(--ink-deep);
+  border-bottom: 1px solid var(--indigo);
+  display: flex; align-items: center;
+  padding: 0 var(--page-px);
+}
+.header-inner {
+  max-width: var(--max-w);
+  width: 100%; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.logo-link { display: flex; align-items: center; text-decoration: none; }
+.logo-full { height: 36px; width: auto; }
+.nav { display: flex; gap: 8px; }
+.nav a {
+  font-family: Georgia, "Times New Roman", serif;
+  font-variant: small-caps;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  text-decoration: none;
+  padding: 6px 16px;
+  border-radius: 20px;
+  border: 1px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+}
+.nav a:hover, .nav a:focus { color: var(--text); border-color: var(--indigo-light); }
+.menu-btn {
+  display: none;
+  background: none; border: 1px solid var(--indigo-light);
+  border-radius: 8px; padding: 6px 10px; cursor: pointer;
+  color: var(--text-dim);
+}
+.menu-btn svg { display: block; }
+@media (max-width: 639px) {
+  .nav { display: none; }
+  .nav.open {
+    display: flex; flex-direction: column;
+    position: absolute; top: var(--header-h); right: var(--page-px);
+    background: var(--ink-deep); border: 1px solid var(--indigo);
+    border-radius: 12px; padding: 8px;
+  }
+  .menu-btn { display: block; }
+}
+
+/* ── Page container ── */
+.page { max-width: var(--max-w); margin: 0 auto; padding: 0 var(--page-px); }
+
+/* ── Hero ── */
+.hero {
+  position: relative;
+  min-height: calc(100vh - var(--header-h));
+  display: flex; align-items: center;
+  overflow: hidden;
+}
+.hero-scene {
+  position: absolute; inset: 0; z-index: 0;
+  width: 100%; height: 100%;
+}
+.hero-scene svg {
+  width: 100%; height: 100%;
+  display: block;
+}
+.hero-content {
+  position: relative; z-index: 1;
+  max-width: var(--max-w); margin: 0 auto;
+  padding: 0 var(--page-px);
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 24px;
+  align-items: center;
+}
+.nudge-col {
+  grid-column: 1 / 8;
+}
+.facts-col {
+  grid-column: 9 / 13;
+}
+@media (max-width: 1023px) {
+  .hero-content { grid-template-columns: 1fr; }
+  .nudge-col, .facts-col { grid-column: 1 / -1; }
+}
+
+/* ── Nudge panel ── */
+.nudge-panel {
+  background: rgba(11, 18, 48, 0.88);
+  border-radius: 16px;
+  padding: 40px 36px;
+  border: 1px solid var(--indigo);
+}
+.date-line {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.8rem;
+  font-variant: small-caps;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+}
+.nudge-text {
+  font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+  line-height: 1.5;
+  color: var(--text);
+  min-height: 4em;
+}
+.nudge-loading {
+  color: var(--text-dim);
+  font-style: italic;
+}
+.sun-times {
+  margin-top: 20px;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  display: flex; gap: 24px;
+}
+.sun-times span { font-variant: small-caps; letter-spacing: 0.06em; }
+
+/* ── Facts panel ── */
+.facts-panel {
+  background: rgba(11, 18, 48, 0.88);
+  border-radius: 16px;
+  padding: 28px 24px;
+  border: 1px solid var(--indigo);
+}
+.facts-title {
+  font-variant: small-caps;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--indigo);
+  padding-bottom: 8px;
+}
+.fact-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(30, 45, 106, 0.4);
+  align-items: center;
+}
+.fact-row:last-child { border-bottom: none; }
+.fact-name {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+.fact-name.venus { color: var(--amber); }
+.fact-detail {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  text-align: right;
+}
+.fact-dir {
+  font-variant: small-caps;
+  letter-spacing: 0.06em;
+}
+.fact-progress {
+  grid-column: 1 / -1;
+  height: 3px;
+  background: var(--indigo);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+.fact-progress-bar {
+  height: 100%;
+  background: var(--amber);
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}
+.fact-not-visible {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  opacity: 0.5;
+  padding: 6px 0;
+}
+.go-out-wrap {
+  margin-top: 24px;
+  text-align: center;
+}
+.go-out-btn {
+  font-family: Georgia, "Times New Roman", serif;
+  font-variant: small-caps;
+  font-size: 0.9rem;
+  letter-spacing: 0.06em;
+  color: var(--ink);
+  background: var(--amber);
+  border: none;
+  padding: 12px 32px;
+  border-radius: 28px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.go-out-btn:hover { background: var(--amber-glow); }
+@media (max-width: 639px) {
+  .go-out-btn { width: 100%; }
+}
+
+/* ── Sky section ── */
+.sky-section {
+  padding: 80px 0;
+}
+.section-title {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-variant: small-caps;
+  letter-spacing: 0.06em;
+  color: var(--text);
+  margin-bottom: 32px;
+  border-bottom: 1px solid var(--indigo);
+  padding-bottom: 12px;
+}
+.sky-strip {
+  width: 100%;
+  background: var(--ink-deep);
+  border: 1px solid var(--indigo);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.sky-strip svg { display: block; width: 100%; height: auto; }
+
+/* ── About section ── */
+.about-section {
+  padding: 80px 0 120px;
+}
+.about-content {
+  max-width: 640px;
+}
+.about-content p {
+  font-size: 1rem;
+  line-height: 1.8;
+  color: var(--text-dim);
+  margin-bottom: 20px;
+}
+.about-content p:last-child { margin-bottom: 0; }
+
+/* ── Timer overlay ── */
+.timer-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(7, 13, 32, 0.92);
+  flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center;
+}
+.timer-overlay.active { display: flex; }
+.timer-msg {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.6rem, 4vw, 2.8rem);
+  color: var(--text);
+  margin-bottom: 24px;
+}
+.timer-countdown {
+  font-family: "Courier New", Courier, monospace;
+  font-size: clamp(2rem, 6vw, 4rem);
+  color: var(--amber);
+  margin-bottom: 40px;
+}
+.timer-exit {
+  font-family: Georgia, "Times New Roman", serif;
+  font-variant: small-caps;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  background: none;
+  border: 1px solid var(--indigo-light);
+  padding: 10px 28px;
+  border-radius: 24px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+.timer-exit:hover { color: var(--text); border-color: var(--text-dim); }
+.timer-hint {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  opacity: 0.6;
+  margin-top: 16px;
+}
+</style>
+</head>
+<body>
+
+<!-- ════════ HEADER ════════ -->
+<header class="header" id="top">
+  <div class="header-inner">
+    <a href="#tonight" class="logo-link" aria-label="Look Up home">
+      <!-- Full logo SVG -->
+      <svg class="logo-full" viewBox="0 0 220 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <!-- L -->
+        <text x="2" y="34" font-family="Georgia,'Times New Roman',serif" font-size="28" fill="#e8e0d0" font-weight="400">L</text>
+        <!-- First o: ring + upward-looking amber pupil -->
+        <circle cx="36" cy="26" r="10" fill="none" stroke="#e8e0d0" stroke-width="1.5"/>
+        <circle cx="36" cy="18" r="2.5" fill="#d4a04a"/>
+        <!-- Second o: ring + upward-looking amber pupil -->
+        <circle cx="60" cy="26" r="10" fill="none" stroke="#e8e0d0" stroke-width="1.5"/>
+        <circle cx="60" cy="18" r="2.5" fill="#d4a04a"/>
+        <!-- k -->
+        <text x="74" y="34" font-family="Georgia,'Times New Roman',serif" font-size="28" fill="#e8e0d0" font-weight="400">k</text>
+        <!-- space + "Up" italic -->
+        <text x="98" y="34" font-family="Georgia,'Times New Roman',serif" font-size="28" fill="#e8e0d0" font-style="italic" font-weight="400">Up</text>
+        <!-- Amber 4-point star above the p -->
+        <polygon points="128,6 129.5,10 134,11.5 129.5,13 128,17 126.5,13 122,11.5 126.5,10" fill="#d4a04a"/>
+        <!-- Hairline horizon underline -->
+        <path d="M2 42 Q60 38, 110 40 T220 42" fill="none" stroke="#e8e0d0" stroke-width="0.5" opacity="0.4"/>
+      </svg>
+    </a>
+    <button class="menu-btn" id="menuBtn" aria-label="Menu">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+        <line x1="3" y1="6" x2="17" y2="6"/><line x1="3" y1="10" x2="17" y2="10"/><line x1="3" y1="14" x2="17" y2="14"/>
+      </svg>
+    </button>
+    <nav class="nav" id="mainNav">
+      <a href="#tonight">Tonight</a>
+      <a href="#sky">Sky</a>
+      <a href="#about">About</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ════════ HERO ════════ -->
+<section class="hero" id="tonight">
+  <!-- Layered scene SVG -->
+  <div class="hero-scene">
+    <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#070d20"/>
+          <stop offset="60%" stop-color="#0b1230"/>
+          <stop offset="100%" stop-color="#162050"/>
+        </linearGradient>
+      </defs>
+      <!-- Sky -->
+      <rect class="scene-sky" width="1440" height="900" fill="url(#skyGrad)"/>
+
+      <!-- Stars -->
+      <g class="scene-stars">
+        <circle cx="120" cy="80" r="1.2" fill="#e8e0d0" opacity="0.7"/>
+        <circle cx="310" cy="45" r="0.8" fill="#e8e0d0" opacity="0.5"/>
+        <circle cx="480" cy="120" r="1" fill="#e8e0d0" opacity="0.6"/>
+        <circle cx="650" cy="30" r="1.4" fill="#e8e0d0" opacity="0.8"/>
+        <circle cx="790" cy="95" r="0.7" fill="#e8e0d0" opacity="0.4"/>
+        <circle cx="920" cy="55" r="1.1" fill="#e8e0d0" opacity="0.7"/>
+        <circle cx="1050" cy="140" r="0.9" fill="#e8e0d0" opacity="0.5"/>
+        <circle cx="1180" cy="70" r="1.3" fill="#e8e0d0" opacity="0.6"/>
+        <circle cx="1320" cy="110" r="0.8" fill="#e8e0d0" opacity="0.4"/>
+        <circle cx="200" cy="200" r="1" fill="#e8e0d0" opacity="0.5"/>
+        <circle cx="400" cy="250" r="0.7" fill="#e8e0d0" opacity="0.4"/>
+        <circle cx="560" cy="180" r="1.2" fill="#e8e0d0" opacity="0.6"/>
+        <circle cx="720" cy="220" r="0.9" fill="#e8e0d0" opacity="0.5"/>
+        <circle cx="880" cy="170" r="1.1" fill="#e8e0d0" opacity="0.7"/>
+        <circle cx="1000" cy="260" r="0.8" fill="#e8e0d0" opacity="0.4"/>
+        <circle cx="1150" cy="200" r="1.3" fill="#e8e0d0" opacity="0.6"/>
+        <circle cx="1350" cy="240" r="0.7" fill="#e8e0d0" opacity="0.5"/>
+        <circle cx="70" cy="300" r="1.1" fill="#e8e0d0" opacity="0.6"/>
+        <circle cx="250" cy="340" r="0.6" fill="#e8e0d0" opacity="0.3"/>
+        <circle cx="500" cy="310" r="0.9" fill="#e8e0d0" opacity="0.5"/>
+        <circle cx="750" cy="350" r="1.0" fill="#e8e0d0" opacity="0.4"/>
+        <circle cx="1100" cy="330" r="0.8" fill="#e8e0d0" opacity="0.5"/>
+        <circle cx="1280" cy="360" r="1.2" fill="#e8e0d0" opacity="0.6"/>
+        <circle cx="160" cy="420" r="0.7" fill="#e8e0d0" opacity="0.3"/>
+        <circle cx="600" cy="400" r="1.0" fill="#e8e0d0" opacity="0.5"/>
+        <circle cx="950" cy="380" r="0.6" fill="#e8e0d0" opacity="0.4"/>
+      </g>
+
+      <!-- Venus glow -->
+      <g class="scene-venus">
+        <circle cx="350" cy="280" r="12" fill="#d4a04a" opacity="0.08"/>
+        <circle cx="350" cy="280" r="6" fill="#d4a04a" opacity="0.15"/>
+        <circle cx="350" cy="280" r="2.5" fill="#d4a04a" opacity="0.9"/>
+      </g>
+
+      <!-- Far hills -->
+      <g class="scene-hills-far">
+        <path d="M0 620 Q180 520, 360 580 Q540 500, 720 560 Q900 490, 1080 540 Q1260 480, 1440 550 L1440 900 L0 900Z" fill="#0e1538" opacity="0.9"/>
+      </g>
+
+      <!-- Mid trees -->
+      <g class="scene-trees">
+        <!-- Tree silhouettes on the hills -->
+        <path d="M80 610 L90 560 L100 610Z" fill="#0a1028"/>
+        <path d="M85 610 L90 570 L95 610Z" fill="#0a1028"/>
+        <path d="M200 590 L210 530 L220 590Z" fill="#0a1028"/>
+        <path d="M205 590 L210 545 L215 590Z" fill="#0a1028"/>
+        <path d="M440 570 L450 510 L460 570Z" fill="#0a1028"/>
+        <path d="M445 570 L450 525 L455 570Z" fill="#0a1028"/>
+        <path d="M700 555 L710 490 L720 555Z" fill="#0a1028"/>
+        <path d="M705 555 L710 505 L715 555Z" fill="#0a1028"/>
+        <path d="M950 535 L960 475 L970 535Z" fill="#0a1028"/>
+        <path d="M955 535 L960 490 L965 535Z" fill="#0a1028"/>
+        <path d="M1200 540 L1210 480 L1220 540Z" fill="#0a1028"/>
+        <path d="M1350 550 L1360 495 L1370 550Z" fill="#0a1028"/>
+      </g>
+
+      <!-- Foreground bushes -->
+      <g class="scene-bushes">
+        <ellipse cx="100" cy="780" rx="80" ry="30" fill="#080e22"/>
+        <ellipse cx="350" cy="800" rx="120" ry="35" fill="#080e22"/>
+        <ellipse cx="700" cy="790" rx="90" ry="28" fill="#080e22"/>
+        <ellipse cx="1100" cy="810" rx="110" ry="32" fill="#080e22"/>
+        <ellipse cx="1380" cy="795" rx="70" ry="25" fill="#080e22"/>
+      </g>
+
+      <!-- Stargazer silhouette on the hill -->
+      <g class="scene-gazer">
+        <!-- Standing figure on the hill ridge -->
+        <!-- Body -->
+        <path d="M860 555 L860 500 Q860 490, 865 488 L870 490 Q872 492, 872 500 L872 540 L880 555" fill="#080e22" stroke="none"/>
+        <!-- Head -->
+        <circle class="gazer-head" cx="866" cy="480" r="9" fill="#080e22"/>
+        <!-- Arm pointing up -->
+        <path d="M862 505 L845 475" stroke="#080e22" stroke-width="3" stroke-linecap="round"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- Content overlay -->
+  <div class="hero-content">
+    <div class="nudge-col">
+      <div class="nudge-panel">
+        <div class="date-line" id="dateLine">—</div>
+        <div class="nudge-text" id="nudgeText">
+          <span class="nudge-loading">Writing your nudge...</span>
+        </div>
+        <div class="sun-times" id="sunTimes"></div>
+      </div>
+    </div>
+    <div class="facts-col">
+      <div class="facts-panel">
+        <div class="facts-title">Visible Tonight</div>
+        <div id="factsList">
+          <div class="fact-not-visible">Loading sky data...</div>
+        </div>
+        <div class="go-out-wrap">
+          <button class="go-out-btn" id="goOutBtn">I'm going out</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ SKY ════════ -->
+<section class="sky-section page" id="sky">
+  <h2 class="section-title">Sky Right Now</h2>
+  <div class="sky-strip" id="skyStrip">
+    <svg viewBox="0 0 1000 200" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" aria-label="Horizon sky map">
+      <defs>
+        <linearGradient id="horizGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#0b1230"/>
+          <stop offset="100%" stop-color="#162050"/>
+        </linearGradient>
+      </defs>
+      <rect width="1000" height="200" fill="url(#horizGrad)"/>
+      <!-- Horizon line -->
+      <line x1="0" y1="170" x2="1000" y2="170" stroke="#1e2d6a" stroke-width="1" opacity="0.6"/>
+      <!-- Compass labels -->
+      <text x="30" y="190" font-family="'Courier New',monospace" font-size="10" fill="#9a9080" font-variant="small-caps">n</text>
+      <text x="155" y="190" font-family="'Courier New',monospace" font-size="10" fill="#9a9080" font-variant="small-caps">ne</text>
+      <text x="280" y="190" font-family="'Courier New',monospace" font-size="10" fill="#9a9080" font-variant="small-caps">e</text>
+      <text x="405" y="190" font-family="'Courier New',monospace" font-size="10" fill="#9a9080" font-variant="small-caps">se</text>
+      <text x="530" y="190" font-family="'Courier New',monospace" font-size="10" fill="#9a9080" font-variant="small-caps">s</text>
+      <text x="655" y="190" font-family="'Courier New',monospace" font-size="10" fill="#9a9080" font-variant="small-caps">sw</text>
+      <text x="780" y="190" font-family="'Courier New',monospace" font-size="10" fill="#9a9080" font-variant="small-caps">w</text>
+      <text x="905" y="190" font-family="'Courier New',monospace" font-size="10" fill="#9a9080" font-variant="small-caps">nw</text>
+      <!-- Dynamic object dots go here -->
+      <g id="skyObjects"></g>
+    </svg>
+  </div>
+</section>
+
+<!-- ════════ ABOUT ════════ -->
+<section class="about-section page" id="about">
+  <h2 class="section-title">About Look Up</h2>
+  <div class="about-content">
+    <p>Look Up runs entirely on your machine. The planet positions come from a local copy of NASA's DE421 ephemeris, computed by Skyfield. No cloud service, no tracking, no telemetry. Your location stays in your config file and never leaves your computer.</p>
+    <p>The short nudge at the top is written by a small language model running on your own hardware through Ollama. If the model is offline, a plain sentence takes its place. Either way the facts are always computed fresh from the ephemeris, never cached or invented.</p>
+    <p>This project exists because stargazing is one of the few things that gets better when you put your phone down. The timer is there to help you do that. Step outside, look up, and give your eyes a few minutes to adjust.</p>
+  </div>
+</section>
+
+<!-- ════════ TIMER OVERLAY ════════ -->
+<div class="timer-overlay" id="timerOverlay">
+  <div class="timer-msg">Phone away. Look up.</div>
+  <div class="timer-countdown" id="timerCountdown">20:00</div>
+  <button class="timer-exit" id="timerExitBtn">Exit</button>
+  <div class="timer-hint">or press Esc</div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ── Menu toggle ──
+  var menuBtn = document.getElementById("menuBtn");
+  var mainNav = document.getElementById("mainNav");
+  menuBtn.addEventListener("click", function () {
+    mainNav.classList.toggle("open");
+  });
+
+  // ── Fetch sky data ──
+  var skyData = null;
+
+  fetch("/api/tonight")
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      skyData = data;
+      renderData(data);
+      renderSkyStrip(data);
+    })
+    .catch(function () {
+      document.getElementById("nudgeText").textContent = "Could not load sky data.";
+    });
+
+  // ── Fetch nudge (can be slow) ──
+  fetch("/api/nudge")
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      document.getElementById("nudgeText").textContent = data.text;
+    })
+    .catch(function () {
+      document.getElementById("nudgeText").textContent = "Step outside tonight. The sky is waiting.";
+    });
+
+  function renderData(data) {
+    // Date line
+    document.getElementById("dateLine").textContent = data.date || "";
+
+    // Sun times
+    var st = document.getElementById("sunTimes");
+    st.innerHTML = "";
+    if (data.sunset) {
+      var s = document.createElement("span");
+      s.textContent = "sunset " + data.sunset;
+      st.appendChild(s);
+    }
+    if (data.sunrise) {
+      var r = document.createElement("span");
+      r.textContent = "sunrise " + data.sunrise;
+      st.appendChild(r);
+    }
+
+    // Facts list
+    var fl = document.getElementById("factsList");
+    fl.innerHTML = "";
+    var visibleObjects = data.objects.filter(function (o) { return o.visible; });
+    var invisibleObjects = data.objects.filter(function (o) { return !o.visible; });
+
+    visibleObjects.forEach(function (obj) {
+      var row = document.createElement("div");
+      row.className = "fact-row";
+
+      var name = document.createElement("div");
+      name.className = "fact-name" + (obj.name === "Venus" ? " venus" : "");
+      name.textContent = obj.name;
+
+      var detail = document.createElement("div");
+      detail.className = "fact-detail";
+      detail.innerHTML = '<span class="fact-dir">' + obj.direction + "</span> " + obj.altitude + "&deg; &middot; " + obj.best_time;
+
+      row.appendChild(name);
+      row.appendChild(detail);
+
+      // Progress bar — how close to peak
+      if (obj.minutes_to_peak !== undefined) {
+        var prog = document.createElement("div");
+        prog.className = "fact-progress";
+        var bar = document.createElement("div");
+        bar.className = "fact-progress-bar";
+        // 0 min = 100%, 360 min (6h) = 0%
+        var pct = Math.max(0, Math.min(100, 100 - (Math.abs(obj.minutes_to_peak) / 360 * 100)));
+        bar.style.width = pct + "%";
+        prog.appendChild(bar);
+        row.appendChild(prog);
+      }
+
+      fl.appendChild(row);
+    });
+
+    invisibleObjects.forEach(function (obj) {
+      var div = document.createElement("div");
+      div.className = "fact-not-visible";
+      var label = obj.name;
+      if (obj.phase) label += " \u00B7 " + obj.phase + " (" + obj.illumination + "%)";
+      else label += " \u00B7 not visible";
+      div.textContent = label;
+      fl.appendChild(div);
+    });
+  }
+
+  // ── Sky strip rendering ──
+  function renderSkyStrip(data) {
+    var g = document.getElementById("skyObjects");
+    g.innerHTML = "";
+    var compassOrder = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
+
+    data.objects.forEach(function (obj) {
+      if (!obj.visible) return;
+
+      // Map compass direction to x position (0-1000)
+      var dirIdx = compassOrder.indexOf(obj.direction);
+      if (dirIdx < 0) dirIdx = 0;
+      var x = 30 + (dirIdx / 16) * 940;
+      // Map altitude to y (higher alt = higher in strip; 10° near bottom, 90° near top)
+      var y = 170 - ((obj.altitude - 10) / 80) * 150;
+
+      var isVenus = obj.name === "Venus";
+      var color = isVenus ? "#d4a04a" : "#e8e0d0";
+      var radius = Math.max(2, 5 - obj.magnitude);
+
+      // Dot
+      var c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      c.setAttribute("cx", x);
+      c.setAttribute("cy", y);
+      c.setAttribute("r", radius);
+      c.setAttribute("fill", color);
+      c.setAttribute("opacity", "0.85");
+      g.appendChild(c);
+
+      // Label
+      var t = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      t.setAttribute("x", x);
+      t.setAttribute("y", y - radius - 6);
+      t.setAttribute("text-anchor", "middle");
+      t.setAttribute("font-family", "'Courier New',monospace");
+      t.setAttribute("font-size", "10");
+      t.setAttribute("fill", color);
+      t.setAttribute("opacity", "0.8");
+      t.textContent = obj.name;
+      g.appendChild(t);
+    });
+  }
+
+  // ── Timer ──
+  var overlay = document.getElementById("timerOverlay");
+  var countdown = document.getElementById("timerCountdown");
+  var goOutBtn = document.getElementById("goOutBtn");
+  var exitBtn = document.getElementById("timerExitBtn");
+  var timerId = null;
+  var timerSeconds = 0;
+
+  function startTimer() {
+    timerSeconds = 20 * 60;
+    overlay.classList.add("active");
+    updateCountdown();
+    timerId = setInterval(function () {
+      timerSeconds--;
+      if (timerSeconds <= 0) {
+        stopTimer();
+        return;
+      }
+      updateCountdown();
+    }, 1000);
+  }
+
+  function stopTimer() {
+    overlay.classList.remove("active");
+    if (timerId) { clearInterval(timerId); timerId = null; }
+  }
+
+  function updateCountdown() {
+    var m = Math.floor(timerSeconds / 60);
+    var s = timerSeconds % 60;
+    countdown.textContent = (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
+  }
+
+  goOutBtn.addEventListener("click", startTimer);
+  exitBtn.addEventListener("click", stopTimer);
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && overlay.classList.contains("active")) {
+      stopTimer();
+    }
+  });
+
+})();
+</script>
+</body>
+</html>
