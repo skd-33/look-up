@@ -391,7 +391,7 @@ body {
   padding: 6px 0;
 }
 .go-out-wrap {
-  margin-top: 24px;
+  margin-top: 20px;
   text-align: center;
 }
 .go-out-btn {
@@ -408,8 +408,89 @@ body {
   transition: background 0.2s;
 }
 .go-out-btn:hover { background: var(--amber-glow); }
+.go-out-subtext {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.76rem;
+  font-style: italic;
+  color: var(--text-dim);
+  margin-top: 8px;
+}
 @media (max-width: 639px) {
   .go-out-btn { width: 100%; }
+}
+
+/* ── Timer duration presets ── */
+.timer-config {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--indigo);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.timer-config-label {
+  font-family: "Courier New", Courier, monospace;
+  font-variant: small-caps;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+.timer-presets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.timer-chip {
+  background: var(--ink);
+  border: 1px solid var(--indigo);
+  color: var(--text-dim);
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+.timer-chip:hover {
+  color: var(--text);
+  border-color: var(--indigo-light);
+}
+.timer-chip.active {
+  background: var(--indigo);
+  color: var(--amber);
+  border-color: var(--amber);
+  font-weight: bold;
+}
+.timer-custom-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--ink);
+  border: 1px solid var(--indigo);
+  border-radius: 14px;
+  padding: 2px 8px;
+}
+.timer-custom-wrap:focus-within {
+  border-color: var(--indigo-light);
+}
+.timer-custom-wrap.active {
+  border-color: var(--amber);
+}
+.timer-custom-input {
+  width: 44px;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.75rem;
+  outline: none;
+  text-align: right;
+}
+.timer-custom-unit {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.72rem;
+  color: var(--text-dim);
 }
 
 /* ── Sky section ── */
@@ -470,7 +551,19 @@ body {
   font-family: "Courier New", Courier, monospace;
   font-size: clamp(2rem, 6vw, 4rem);
   color: var(--amber);
-  margin-bottom: 40px;
+  margin-bottom: 24px;
+}
+.timer-closing-msg {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.1rem, 2.8vw, 1.6rem);
+  color: var(--amber);
+  margin-bottom: 28px;
+  max-width: 480px;
+  padding: 0 16px;
+  line-height: 1.4;
+}
+.timer-closing-msg[hidden] {
+  display: none;
 }
 .timer-exit {
   font-family: Georgia, "Times New Roman", serif;
@@ -719,8 +812,22 @@ body {
         <div id="factsList">
           <div class="fact-not-visible">Loading sky data...</div>
         </div>
+        <div class="timer-config">
+          <span class="timer-config-label">Stargazing Duration</span>
+          <div class="timer-presets" role="radiogroup" aria-label="Duration options">
+            <button type="button" class="timer-chip" data-min="10">10m</button>
+            <button type="button" class="timer-chip active" data-min="20">20m</button>
+            <button type="button" class="timer-chip" data-min="30">30m</button>
+            <button type="button" class="timer-chip" data-min="60">60m</button>
+            <div class="timer-custom-wrap" id="timerCustomWrap">
+              <input type="number" id="customTimerInput" class="timer-custom-input" min="1" max="180" placeholder="Custom" aria-label="Custom minutes (1-180)">
+              <span class="timer-custom-unit">m</span>
+            </div>
+          </div>
+        </div>
         <div class="go-out-wrap">
           <button class="go-out-btn" id="goOutBtn">I'm going out</button>
+          <div class="go-out-subtext">Dims the screen and starts your timer.</div>
         </div>
       </div>
     </div>
@@ -768,8 +875,9 @@ body {
 
 <!-- ════════ TIMER OVERLAY ════════ -->
 <div class="timer-overlay" id="timerOverlay">
-  <div class="timer-msg">Phone away. Look up.</div>
+  <div class="timer-msg" id="timerMsg">Phone away. Look up.</div>
   <div class="timer-countdown" id="timerCountdown">20:00</div>
+  <div class="timer-closing-msg" id="timerClosingMsg" hidden>Time is up. Welcome back from the stars.</div>
   <button class="timer-exit" id="timerExitBtn">Exit</button>
   <div class="timer-hint">or press Esc</div>
 </div>
@@ -1077,31 +1185,135 @@ body {
     });
   }
 
-  // ── Timer ──
+  // ── Timer duration selection ──
+  var timerMinutes = 20;
+  try {
+    var savedMins = localStorage.getItem("lookup_timer_minutes");
+    if (savedMins) {
+      var parsedM = parseInt(savedMins, 10);
+      if (parsedM >= 1 && parsedM <= 180) {
+        timerMinutes = parsedM;
+      }
+    }
+  } catch (e) {}
+
+  var timerChips = document.querySelectorAll(".timer-chip");
+  var customTimerInput = document.getElementById("customTimerInput");
+  var timerCustomWrap = document.getElementById("timerCustomWrap");
+
+  function setTimerDuration(mins, isCustom) {
+    timerMinutes = Math.max(1, Math.min(180, mins));
+    try {
+      localStorage.setItem("lookup_timer_minutes", String(timerMinutes));
+    } catch (e) {}
+
+    timerChips.forEach(function (chip) {
+      var val = parseInt(chip.getAttribute("data-min"), 10);
+      if (!isCustom && val === timerMinutes) {
+        chip.classList.add("active");
+      } else {
+        chip.classList.remove("active");
+      }
+    });
+
+    if (isCustom) {
+      timerCustomWrap.classList.add("active");
+      customTimerInput.value = timerMinutes;
+    } else {
+      timerCustomWrap.classList.remove("active");
+      customTimerInput.value = "";
+    }
+  }
+
+  if ([10, 20, 30, 60].indexOf(timerMinutes) !== -1) {
+    setTimerDuration(timerMinutes, false);
+  } else {
+    setTimerDuration(timerMinutes, true);
+  }
+
+  timerChips.forEach(function (chip) {
+    chip.addEventListener("click", function () {
+      var val = parseInt(chip.getAttribute("data-min"), 10);
+      setTimerDuration(val, false);
+    });
+  });
+
+  customTimerInput.addEventListener("input", function () {
+    var val = parseInt(customTimerInput.value, 10);
+    if (!isNaN(val) && val >= 1 && val <= 180) {
+      setTimerDuration(val, true);
+    }
+  });
+
+  customTimerInput.addEventListener("change", function () {
+    var val = parseInt(customTimerInput.value, 10);
+    if (isNaN(val) || val < 1) val = 1;
+    if (val > 180) val = 180;
+    setTimerDuration(val, true);
+  });
+
+  // ── Web Audio API Chime ──
+  function playSoftChime() {
+    try {
+      var AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return;
+      var ctx = new AudioContextClass();
+      var notes = [523.25, 659.25, 783.99]; // C5, E5, G5 soft chord
+      var now = ctx.currentTime;
+      notes.forEach(function (freq, i) {
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, now + i * 0.16);
+
+        gain.gain.setValueAtTime(0, now + i * 0.16);
+        gain.gain.linearRampToValueAtTime(0.09, now + i * 0.16 + 0.04);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.16 + 1.2);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(now + i * 0.16);
+        osc.stop(now + i * 0.16 + 1.25);
+      });
+    } catch (e) {}
+  }
+
+  // ── Timer overlay execution ──
   var overlay = document.getElementById("timerOverlay");
   var countdown = document.getElementById("timerCountdown");
+  var timerClosingMsg = document.getElementById("timerClosingMsg");
   var goOutBtn = document.getElementById("goOutBtn");
   var exitBtn = document.getElementById("timerExitBtn");
   var timerId = null;
   var timerSeconds = 0;
 
   function startTimer() {
-    timerSeconds = 20 * 60;
+    timerSeconds = timerMinutes * 60;
     overlay.classList.add("active");
+    timerClosingMsg.hidden = true;
     updateCountdown();
     timerId = setInterval(function () {
       timerSeconds--;
       if (timerSeconds <= 0) {
-        stopTimer();
+        onTimerFinish();
         return;
       }
       updateCountdown();
     }, 1000);
   }
 
+  function onTimerFinish() {
+    if (timerId) { clearInterval(timerId); timerId = null; }
+    playSoftChime();
+    countdown.textContent = "00:00";
+    timerClosingMsg.hidden = false;
+  }
+
   function stopTimer() {
     overlay.classList.remove("active");
     if (timerId) { clearInterval(timerId); timerId = null; }
+    timerClosingMsg.hidden = true;
   }
 
   function updateCountdown() {
