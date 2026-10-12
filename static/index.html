@@ -35,6 +35,9 @@ body {
   line-height: 1.6;
   overflow-x: hidden;
 }
+section[id] {
+  scroll-margin-top: 88px;
+}
 
 /* ── Header ── */
 .header {
@@ -296,10 +299,13 @@ body {
 
 /* ── Nudge panel ── */
 .nudge-panel {
-  background: rgba(11, 18, 48, 0.88);
-  border-radius: 16px;
+  background: rgba(7, 13, 32, 0.92);
+  border-radius: 2px;
   padding: 40px 36px;
-  border: 1px solid var(--indigo);
+  border-top: 1px solid rgba(232,224,208,0.12);
+  border-bottom: 1px solid rgba(232,224,208,0.12);
+  border-left: none;
+  border-right: none;
 }
 .nudge-header-row {
   display: flex;
@@ -376,10 +382,13 @@ body {
 
 /* ── Facts panel ── */
 .facts-panel {
-  background: rgba(11, 18, 48, 0.88);
-  border-radius: 16px;
+  background: rgba(7, 13, 32, 0.92);
+  border-radius: 2px;
   padding: 28px 24px;
-  border: 1px solid var(--indigo);
+  border-top: 1px solid rgba(232,224,208,0.12);
+  border-bottom: 1px solid rgba(232,224,208,0.12);
+  border-left: none;
+  border-right: none;
 }
 .facts-title {
   font-variant: small-caps;
@@ -512,6 +521,7 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 2px;
+  min-width: 88px;
   background: var(--ink);
   border: 1px solid var(--indigo);
   border-radius: 14px;
@@ -545,37 +555,157 @@ body {
 }
 .section-title {
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-size: clamp(1.1rem, 2vw, 1.5rem);
+  font-weight: 400;
   font-variant: small-caps;
   letter-spacing: 0.06em;
   color: var(--text);
-  margin-bottom: 32px;
-  border-bottom: 1px solid var(--indigo);
+  margin-bottom: 24px;
+  border-bottom: 1px solid rgba(232,224,208,0.10);
   padding-bottom: 12px;
+}
+.sky-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.sky-subtitle {
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-size: 0.88rem;
+  color: var(--text-dim);
+  margin-top: -12px;
+  margin-bottom: 0;
+  max-width: 600px;
+  line-height: 1.5;
+}
+.sky-mode-toggle {
+  display: inline-flex;
+  gap: 4px;
+  background: var(--ink);
+  border: 1px solid var(--indigo);
+  border-radius: 20px;
+  padding: 3px;
+}
+.sky-mode-chip {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-family: Georgia, "Times New Roman", serif;
+  font-variant: small-caps;
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+  padding: 4px 12px;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.sky-mode-chip:hover {
+  color: var(--text);
+}
+.sky-mode-chip.active {
+  background: var(--indigo);
+  color: var(--amber);
+  font-weight: bold;
 }
 .sky-strip {
   width: 100%;
   background: var(--ink-deep);
-  border: 1px solid var(--indigo);
-  border-radius: 12px;
+  border-top: 1px solid rgba(232,224,208,0.10);
+  border-bottom: 1px solid rgba(232,224,208,0.10);
+  border-left: none;
+  border-right: none;
+  border-radius: 0;
   overflow: hidden;
+  position: relative;
 }
 .sky-strip svg { display: block; width: 100%; height: auto; }
+.sky-below-bar {
+  margin-top: 12px;
+  padding: 10px 16px;
+  background: rgba(11, 18, 48, 0.7);
+  border: 1px solid var(--indigo);
+  border-radius: 8px;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+.sky-below-bar[hidden] {
+  display: none;
+}
 
 /* ── About section ── */
 .about-section {
   padding: 80px 0 120px;
 }
-.about-content {
-  max-width: 640px;
+.about-header {
+  margin-bottom: 32px;
 }
-.about-content p {
-  font-size: 1rem;
+.about-lead {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.05rem;
+  font-style: italic;
+  color: var(--text-dim);
+  margin-top: -12px;
+  margin-bottom: 0;
+}
+.about-content {
+  max-width: 720px;
   line-height: 1.8;
   color: var(--text-dim);
-  margin-bottom: 20px;
 }
-.about-content p:last-child { margin-bottom: 0; }
+.about-content p {
+  margin-bottom: 1em;
+}
+.about-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+.about-card {
+  background: transparent;
+  border-top: 1px solid rgba(232,224,208,0.10);
+  border-bottom: none;
+  border-left: none;
+  border-right: none;
+  border-radius: 0;
+  padding: 24px 0;
+  display: flex;
+  flex-direction: column;
+}
+.about-card-num {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  color: var(--amber);
+  margin-bottom: 12px;
+}
+.about-card-title {
+  font-family: Georgia, "Times New Roman", serif;
+  font-variant: small-caps;
+  font-size: 1.15rem;
+  letter-spacing: 0.05em;
+  color: var(--text);
+  margin-bottom: 16px;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.about-card-text {
+  font-size: 0.95rem;
+  line-height: 1.75;
+  color: var(--text-dim);
+  margin: 0;
+}
+@media (max-width: 900px) {
+  .about-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
 
 /* ── Timer overlay ── */
 .timer-overlay {
@@ -885,40 +1015,41 @@ body {
 
       <!-- Venus glow (parallax factor 0.03) -->
       <g class="scene-venus" data-parallax="0.03" style="transition:transform 0.15s ease-out">
-        <circle cx="350" cy="280" r="12" fill="#d4a04a" opacity="0.08"/>
-        <circle cx="350" cy="280" r="6" fill="#d4a04a" opacity="0.15"/>
-        <circle cx="350" cy="280" r="2.5" fill="#d4a04a" opacity="0.9"/>
+        <circle cx="350" cy="280" r="28" fill="#d4a04a" opacity="0.06"/>
+        <circle cx="350" cy="280" r="14" fill="#d4a04a" opacity="0.14"/>
+        <circle cx="350" cy="280" r="6" fill="#d4a04a" opacity="0.30"/>
+        <circle cx="350" cy="280" r="2.5" fill="#e8b85a" opacity="0.95"/>
       </g>
 
       <!-- Far hills -->
       <g class="scene-hills-far" data-parallax="0.05" style="transition:transform 0.15s ease-out">
-        <path d="M0 620 Q180 520, 360 580 Q540 500, 720 560 Q900 490, 1080 540 Q1260 480, 1440 550 L1440 900 L0 900Z" fill="#0e1538" opacity="0.9"/>
+        <path d="M0 620 Q180 520, 360 580 Q540 500, 720 560 Q900 490, 1080 540 Q1260 480, 1440 550 L1440 900 L0 900Z" fill="#15203e" opacity="0.95"/>
       </g>
 
       <!-- Mid trees -->
       <g class="scene-trees" data-parallax="0.07" style="transition:transform 0.15s ease-out">
         <!-- Tree silhouettes on the hills -->
-        <path d="M80 610 L90 560 L100 610Z" fill="#0a1028"/>
-        <path d="M85 610 L90 570 L95 610Z" fill="#0a1028"/>
-        <path d="M200 590 L210 530 L220 590Z" fill="#0a1028"/>
-        <path d="M205 590 L210 545 L215 590Z" fill="#0a1028"/>
-        <path d="M440 570 L450 510 L460 570Z" fill="#0a1028"/>
-        <path d="M445 570 L450 525 L455 570Z" fill="#0a1028"/>
-        <path d="M700 555 L710 490 L720 555Z" fill="#0a1028"/>
-        <path d="M705 555 L710 505 L715 555Z" fill="#0a1028"/>
-        <path d="M950 535 L960 475 L970 535Z" fill="#0a1028"/>
-        <path d="M955 535 L960 490 L965 535Z" fill="#0a1028"/>
-        <path d="M1200 540 L1210 480 L1220 540Z" fill="#0a1028"/>
-        <path d="M1350 550 L1360 495 L1370 550Z" fill="#0a1028"/>
+        <path d="M80 610 L90 560 L100 610Z" fill="#101a35"/>
+        <path d="M85 610 L90 570 L95 610Z" fill="#101a35"/>
+        <path d="M200 590 L210 530 L220 590Z" fill="#101a35"/>
+        <path d="M205 590 L210 545 L215 590Z" fill="#101a35"/>
+        <path d="M440 570 L450 510 L460 570Z" fill="#101a35"/>
+        <path d="M445 570 L450 525 L455 570Z" fill="#101a35"/>
+        <path d="M700 555 L710 490 L720 555Z" fill="#101a35"/>
+        <path d="M705 555 L710 505 L715 555Z" fill="#101a35"/>
+        <path d="M950 535 L960 475 L970 535Z" fill="#101a35"/>
+        <path d="M955 535 L960 490 L965 535Z" fill="#101a35"/>
+        <path d="M1200 540 L1210 480 L1220 540Z" fill="#101a35"/>
+        <path d="M1350 550 L1360 495 L1370 550Z" fill="#101a35"/>
       </g>
 
       <!-- Foreground bushes -->
       <g class="scene-bushes" data-parallax="0.09" style="transition:transform 0.15s ease-out">
-        <ellipse cx="100" cy="780" rx="80" ry="30" fill="#080e22"/>
-        <ellipse cx="350" cy="800" rx="120" ry="35" fill="#080e22"/>
-        <ellipse cx="700" cy="790" rx="90" ry="28" fill="#080e22"/>
-        <ellipse cx="1100" cy="810" rx="110" ry="32" fill="#080e22"/>
-        <ellipse cx="1380" cy="795" rx="70" ry="25" fill="#080e22"/>
+        <ellipse cx="100" cy="780" rx="80" ry="30" fill="#0c152d"/>
+        <ellipse cx="350" cy="800" rx="120" ry="35" fill="#0c152d"/>
+        <ellipse cx="700" cy="790" rx="90" ry="28" fill="#0c152d"/>
+        <ellipse cx="1100" cy="810" rx="110" ry="32" fill="#0c152d"/>
+        <ellipse cx="1380" cy="795" rx="70" ry="25" fill="#0c152d"/>
       </g>
 
       <!-- Stargazer silhouette on the hill -->
@@ -970,7 +1101,7 @@ body {
             <button type="button" class="timer-chip" data-min="60">60m</button>
             <div class="timer-custom-wrap" id="timerCustomWrap">
               <input type="number" id="customTimerInput" class="timer-custom-input" min="1" max="180" placeholder="Custom" aria-label="Custom minutes (1-180)">
-              <span class="timer-custom-unit">m</span>
+              <span class="timer-custom-unit">min</span>
             </div>
           </div>
         </div>
@@ -987,25 +1118,49 @@ body {
 <section class="sky-section page" id="sky">
   <h2 class="section-title">Sky Right Now</h2>
   <div class="sky-strip" id="skyStrip">
-    <svg viewBox="0 0 1000 200" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" aria-label="Horizon sky map">
+    <svg viewBox="0 0 1000 260" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" aria-label="Horizon sky map">
       <defs>
         <linearGradient id="horizGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#0b1230"/>
+          <stop offset="0%" stop-color="#070d20"/>
+          <stop offset="85%" stop-color="#0b1230"/>
           <stop offset="100%" stop-color="#162050"/>
         </linearGradient>
+        <linearGradient id="groundGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#101a30"/>
+          <stop offset="100%" stop-color="#080e1a"/>
+        </linearGradient>
       </defs>
-      <rect width="1000" height="200" fill="url(#horizGrad)"/>
+      <rect width="1000" height="260" fill="url(#horizGrad)"/>
+      <!-- Altitude gridlines -->
+      <line x1="0" y1="200" x2="1000" y2="200" stroke="#1e2d6a" stroke-width="0.5" opacity="0.3"/>
+      <text x="8" y="204" font-family="'Courier New',monospace" font-size="9" fill="#9a9080" opacity="0.5">0°</text>
+      <line x1="0" y1="140" x2="1000" y2="140" stroke="#1e2d6a" stroke-width="0.5" opacity="0.2" stroke-dasharray="4 6"/>
+      <text x="8" y="144" font-family="'Courier New',monospace" font-size="9" fill="#9a9080" opacity="0.4">30°</text>
+      <line x1="0" y1="80" x2="1000" y2="80" stroke="#1e2d6a" stroke-width="0.5" opacity="0.2" stroke-dasharray="4 6"/>
+      <text x="8" y="84" font-family="'Courier New',monospace" font-size="9" fill="#9a9080" opacity="0.4">60°</text>
+      <line x1="0" y1="20" x2="1000" y2="20" stroke="#1e2d6a" stroke-width="0.5" opacity="0.2" stroke-dasharray="4 6"/>
+      <text x="8" y="24" font-family="'Courier New',monospace" font-size="9" fill="#9a9080" opacity="0.4">90°</text>
       <!-- Horizon line -->
-      <line x1="0" y1="170" x2="1000" y2="170" stroke="#1e2d6a" stroke-width="1" opacity="0.6"/>
+      <line x1="0" y1="200" x2="1000" y2="200" stroke="#1e2d6a" stroke-width="1" opacity="0.6"/>
+      <!-- Ground silhouette -->
+      <path d="M0 200 Q50 192,100 196 Q200 188,300 194 Q400 186,500 192 Q600 184,700 190 Q800 186,900 193 Q950 188,1000 195 L1000 260 L0 260Z" fill="url(#groundGrad)"/>
+      <!-- Ground trees -->
+      <path d="M60 196 L65 182 L70 196Z" fill="#0a1020" opacity="0.8"/>
+      <path d="M180 192 L186 174 L192 192Z" fill="#0a1020" opacity="0.8"/>
+      <path d="M350 194 L357 178 L364 194Z" fill="#0a1020" opacity="0.7"/>
+      <path d="M520 190 L526 174 L532 190Z" fill="#0a1020" opacity="0.8"/>
+      <path d="M680 188 L686 172 L692 188Z" fill="#0a1020" opacity="0.7"/>
+      <path d="M820 190 L826 176 L832 190Z" fill="#0a1020" opacity="0.8"/>
+      <path d="M940 193 L946 180 L952 193Z" fill="#0a1020" opacity="0.7"/>
       <!-- Compass labels -->
-      <text x="30" y="190" font-family="'Courier New',monospace" font-size="10" fill="#9a9080" font-variant="small-caps">n</text>
-      <text x="155" y="190" font-family="'Courier New',monospace" font-size="10" fill="#9a9080" font-variant="small-caps">ne</text>
-      <text x="280" y="190" font-family="'Courier New',monospace" font-size="10" fill="#9a9080" font-variant="small-caps">e</text>
-      <text x="405" y="190" font-family="'Courier New',monospace" font-size="10" fill="#9a9080" font-variant="small-caps">se</text>
-      <text x="530" y="190" font-family="'Courier New',monospace" font-size="10" fill="#9a9080" font-variant="small-caps">s</text>
-      <text x="655" y="190" font-family="'Courier New',monospace" font-size="10" fill="#9a9080" font-variant="small-caps">sw</text>
-      <text x="780" y="190" font-family="'Courier New',monospace" font-size="10" fill="#9a9080" font-variant="small-caps">w</text>
-      <text x="905" y="190" font-family="'Courier New',monospace" font-size="10" fill="#9a9080" font-variant="small-caps">nw</text>
+      <text x="30" y="250" font-family="'Courier New',monospace" font-size="10" fill="#9a9080" font-variant="small-caps">n</text>
+      <text x="155" y="250" font-family="'Courier New',monospace" font-size="10" fill="#9a9080" font-variant="small-caps">ne</text>
+      <text x="280" y="250" font-family="'Courier New',monospace" font-size="10" fill="#9a9080" font-variant="small-caps">e</text>
+      <text x="405" y="250" font-family="'Courier New',monospace" font-size="10" fill="#9a9080" font-variant="small-caps">se</text>
+      <text x="530" y="250" font-family="'Courier New',monospace" font-size="10" fill="#9a9080" font-variant="small-caps">s</text>
+      <text x="655" y="250" font-family="'Courier New',monospace" font-size="10" fill="#9a9080" font-variant="small-caps">sw</text>
+      <text x="780" y="250" font-family="'Courier New',monospace" font-size="10" fill="#9a9080" font-variant="small-caps">w</text>
+      <text x="905" y="250" font-family="'Courier New',monospace" font-size="10" fill="#9a9080" font-variant="small-caps">nw</text>
       <!-- Dynamic object dots go here -->
       <g id="skyObjects"></g>
     </svg>
@@ -1350,19 +1505,42 @@ body {
     g.innerHTML = "";
     var compassOrder = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
 
+    // Find the target (brightest visible) for amber glow
+    var visibleObjs = data.objects.filter(function(o){ return o.visible; });
+    var targetObj = visibleObjs.length > 0 ? visibleObjs.reduce(function(a, b){ return (a.magnitude || 99) < (b.magnitude || 99) ? a : b; }) : null;
+
     data.objects.forEach(function (obj) {
       if (!obj.visible) return;
 
-      // Map compass direction to x position (0-1000)
-      var dirIdx = compassOrder.indexOf(obj.direction);
-      if (dirIdx < 0) dirIdx = 0;
-      var x = 30 + (dirIdx / 16) * 940;
-      // Map altitude to y (higher alt = higher in strip; 10° near bottom, 90° near top)
-      var y = 170 - ((obj.altitude - 10) / 80) * 150;
+      // Map azimuth to x position (0-1000), use actual azimuth degrees
+      var az = obj.azimuth !== undefined ? obj.azimuth : 0;
+      var x = 30 + (az / 360) * 940;
+      // Map altitude to y (higher alt = higher in strip; 0° = 200, 90° = 20)
+      var alt = obj.altitude || 0;
+      var y = 200 - (alt / 90) * 180;
 
-      var isVenus = obj.name === "Venus";
-      var color = isVenus ? "#d4a04a" : "#e8e0d0";
-      var radius = Math.max(2, 5 - obj.magnitude);
+      var isTarget = targetObj && obj.name === targetObj.name;
+      var color = isTarget ? "#d4a04a" : "#e8e0d0";
+      // Dot size by brightness: brighter = bigger
+      var radius = Math.max(2.5, Math.min(7, 5 - obj.magnitude * 0.6));
+
+      // Amber glow behind target
+      if (isTarget) {
+        var glow = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        glow.setAttribute("cx", x);
+        glow.setAttribute("cy", y);
+        glow.setAttribute("r", radius * 4);
+        glow.setAttribute("fill", "#d4a04a");
+        glow.setAttribute("opacity", "0.10");
+        g.appendChild(glow);
+        var glow2 = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        glow2.setAttribute("cx", x);
+        glow2.setAttribute("cy", y);
+        glow2.setAttribute("r", radius * 2);
+        glow2.setAttribute("fill", "#d4a04a");
+        glow2.setAttribute("opacity", "0.18");
+        g.appendChild(glow2);
+      }
 
       // Dot
       var c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -1370,7 +1548,7 @@ body {
       c.setAttribute("cy", y);
       c.setAttribute("r", radius);
       c.setAttribute("fill", color);
-      c.setAttribute("opacity", "0.85");
+      c.setAttribute("opacity", "0.9");
       g.appendChild(c);
 
       // Label
@@ -1381,7 +1559,7 @@ body {
       t.setAttribute("font-family", "'Courier New',monospace");
       t.setAttribute("font-size", "10");
       t.setAttribute("fill", color);
-      t.setAttribute("opacity", "0.8");
+      t.setAttribute("opacity", "0.85");
       t.textContent = obj.name;
       g.appendChild(t);
     });

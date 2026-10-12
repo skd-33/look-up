@@ -8,11 +8,31 @@ from skyfield.almanac import find_discrete, sunrise_sunset
 DIR = os.path.dirname(os.path.abspath(__file__))
 
 BODIES = {
-    "Venus":   {"id": "venus",   "base_mag": -4.4},
-    "Mars":    {"id": "mars",    "base_mag": 1.0},
-    "Jupiter": {"id": "jupiter barycenter", "base_mag": -2.5},
-    "Saturn":  {"id": "saturn barycenter",  "base_mag": 0.5},
-    "Moon":    {"id": "moon",    "base_mag": -12.0},
+    "Venus": {
+        "id": "venus",
+        "base_mag": -4.4,
+        "appearance": "a brilliant, steady diamond-like light",
+    },
+    "Mars": {
+        "id": "mars",
+        "base_mag": 1.0,
+        "appearance": "a warm, reddish-orange ember",
+    },
+    "Jupiter": {
+        "id": "jupiter barycenter",
+        "base_mag": -2.5,
+        "appearance": "a brilliant, steady cream-colored light",
+    },
+    "Saturn": {
+        "id": "saturn barycenter",
+        "base_mag": 0.5,
+        "appearance": "a gentle, golden-yellow ember",
+    },
+    "Moon": {
+        "id": "moon",
+        "base_mag": -12.0,
+        "appearance": "the silver glow of the moon",
+    },
 }
 
 MOON_PHASES = [
@@ -43,6 +63,37 @@ def _compass(az_deg):
     return COMPASS[idx]
 
 
+def _natural_position(alt, az):
+    comp = _compass(az)
+    comp_map = {
+        "N": "northern", "NNE": "north-northeastern", "NE": "northeastern", "ENE": "east-northeastern",
+        "E": "eastern", "ESE": "east-southeastern", "SE": "southeastern", "SSE": "south-southeastern",
+        "S": "southern", "SSW": "south-southwestern", "SW": "southwestern", "WSW": "west-southwestern",
+        "W": "western", "WNW": "west-northwestern", "NW": "northwestern", "NNW": "north-northwestern",
+    }
+    dir_name = comp_map.get(comp, "eastern")
+    if alt >= 70:
+        return f"high overhead in the {dir_name} sky"
+    elif alt >= 35:
+        return f"high in the {dir_name} sky"
+    elif alt >= 15:
+        return f"mid-way up in the {dir_name} sky"
+    else:
+        return f"low in the {dir_name} sky"
+
+
+def _natural_time(dt):
+    h = dt.hour
+    if h in (23, 0, 1):
+        return "around midnight"
+    elif 4 <= h <= 6:
+        return f"before dawn (around {dt.strftime('%I:%M %p').lstrip('0')})"
+    elif 18 <= h <= 21:
+        return f"in the evening (around {dt.strftime('%I:%M %p').lstrip('0')})"
+    else:
+        return f"around {dt.strftime('%I:%M %p').lstrip('0')}"
+
+
 def _moon_phase(elongation_deg):
     """Return phase name and illumination % from Sun-Earth-Moon elongation."""
     illum = (1 - math.cos(math.radians(elongation_deg))) / 2 * 100
@@ -51,10 +102,7 @@ def _moon_phase(elongation_deg):
 
 
 def tonight(lat, lon, tz_hours=None):
-    """Return dict of tonight's sky for a given location.
-
-    tz_hours: UTC offset in hours (e.g. 5.5 for IST). If None, estimated from lon.
-    """
+    """Return dict of tonight's sky for a given location using local de421.bsp."""
     load = Loader(DIR)
     ts = load.timescale(builtin=True)
     eph = load("de421.bsp")
@@ -79,10 +127,11 @@ def tonight(lat, lon, tz_hours=None):
         ref_date = today
 
     start_local = datetime(ref_date.year, ref_date.month, ref_date.day, 16, 0, tzinfo=tz)
-    end_local = start_local + timedelta(hours=15)  # until 7am next morning
+    end_local = start_local + timedelta(hours=15)  # covers until 7am next morning
 
     t0 = ts.from_datetime(start_local)
     t1 = ts.from_datetime(end_local)
+    t_now = ts.from_datetime(now_utc)
 
     observer = earth + wgs84.latlon(lat, lon)
 
@@ -97,26 +146,28 @@ def tonight(lat, lon, tz_hours=None):
         elif ev == 1 and sunrise_str is None:
             sunrise_str = local.strftime("%I:%M %p")
 
-    # Check each body across the night window in 10-min steps
-    steps = 90  # 15 hours / 10 min
+    # Step through night window in 10-min increments
+    steps = 90
     t_steps = ts.linspace(t0, t1, steps + 1)
 
-    t_now = ts.from_datetime(now_utc)
-
     objects = []
-    best_peak_minutes = None  # window_minutes tracking
 
     for name, info in BODIES.items():
         body = eph[info["id"]]
+
+        # Current position right now
+        now_app = observer.at(t_now).observe(body).apparent()
+        now_alt_deg, now_az_deg, _ = now_app.altaz()
+        now_alt = now_alt_deg.degrees
+        now_az = now_az_deg.degrees
+
         best_alt = -90
         best_time = None
         best_az = 0
 
         for t_step in t_steps:
-            # Check sun altitude — need civil twilight (sun below -6°)
             sun_app = observer.at(t_step).observe(sun_body).apparent()
-            sun_alt_deg = sun_app.altaz()[0].degrees
-            if sun_alt_deg > -6:
+            if sun_app.altaz()[0].degrees > -6:
                 continue
 
             app = observer.at(t_step).observe(body).apparent()
@@ -129,21 +180,44 @@ def tonight(lat, lon, tz_hours=None):
                 best_az = az_val
                 best_time = t_step
 
-        visible = best_alt > 10 and best_time is not None
+        # Fine-tune best_time to nearest minute within +/- 15 min window
+        if best_time is not None:
+            best_dt = best_time.utc_datetime()
+            refine_start = ts.from_datetime(best_dt - timedelta(minutes=15))
+            refine_end = ts.from_datetime(best_dt + timedelta(minutes=15))
+            for t_fine in ts.linspace(refine_start, refine_end, 31):
+                sun_alt = observer.at(t_fine).observe(sun_body).apparent().altaz()[0].degrees
+                if sun_alt > -6:
+                    continue
+                alt_deg, az_deg, _ = observer.at(t_fine).observe(body).apparent().altaz()
+                if alt_deg.degrees > best_alt:
+                    best_alt = alt_deg.degrees
+                    best_az = az_deg.degrees
+                    best_time = t_fine
 
-        obj = {"name": name, "visible": visible}
+        visible = bool((best_alt > 10) and (best_time is not None))
+
+        obj = {
+            "name": name,
+            "visible": visible,
+            "magnitude": float(info["base_mag"]),
+            "current_altitude": round(float(now_alt), 1),
+            "current_azimuth": round(float(now_az), 1),
+            "current_direction": _compass(now_az),
+            "is_up_now": bool(now_alt > 0),
+            "appearance": info["appearance"],
+        }
+
         if visible:
             local_best = best_time.utc_datetime().astimezone(tz)
+            delta = (best_time.utc_datetime() - now_utc).total_seconds() / 60
             obj["best_time"] = local_best.strftime("%I:%M %p")
             obj["direction"] = _compass(best_az)
-            obj["altitude"] = round(best_alt, 1)
-            obj["magnitude"] = info["base_mag"]
-
-            # window_minutes: minutes from now until this object peaks
-            delta = (best_time.utc_datetime() - now_utc).total_seconds() / 60
-            obj["minutes_to_peak"] = round(delta)
-            if best_peak_minutes is None or abs(delta) < abs(best_peak_minutes):
-                best_peak_minutes = delta
+            obj["altitude"] = round(float(best_alt), 1)
+            obj["azimuth"] = round(float(best_az), 1)
+            obj["minutes_to_peak"] = int(round(delta))
+            obj["natural_position"] = _natural_position(best_alt, best_az)
+            obj["natural_time"] = _natural_time(local_best)
 
         if name == "Moon":
             moon_app = observer.at(t_now).observe(body).apparent()
@@ -155,16 +229,21 @@ def tonight(lat, lon, tz_hours=None):
 
         objects.append(obj)
 
+    # Window minutes: until the single best-visible object peaks
+    visible_objects = [o for o in objects if o.get("visible")]
+    best_visible_target = min(visible_objects, key=lambda o: o.get("magnitude", 99)) if visible_objects else None
+    window_mins = best_visible_target.get("minutes_to_peak") if best_visible_target else None
+
     return {
         "date": now_local.strftime("%a %d %b, %I:%M %p"),
         "sunset": sunset_str,
         "sunrise": sunrise_str,
         "objects": objects,
-        "window_minutes": round(best_peak_minutes) if best_peak_minutes else None,
+        "window_minutes": window_mins,
     }
 
 
 if __name__ == "__main__":
     import json
-    data = tonight(12.9716, 77.5946, tz_hours=5.5)
+    data = tonight(12.9716, 77.5946)
     print(json.dumps(data, indent=2))

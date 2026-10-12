@@ -9,7 +9,7 @@ from nudge import make_nudge, make_reflection
 # --- Config ---
 LAT = 12.9716
 LON = 77.5946
-MODEL = "gemma3:1b"
+MODEL = "qwen2.5:1.5b"
 PORT = 8000
 
 STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
